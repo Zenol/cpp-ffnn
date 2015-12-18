@@ -1,5 +1,8 @@
 #include <functional>
 #include <cmath>
+
+#include <ftl/prelude.h>
+
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/vector_sparse.hpp>
 
@@ -18,11 +21,14 @@ namespace ffnn
          * \param output_size The number of neurons inside the layer
          */
         Layer(unsigned int input_size, unsigned int output_size,
-              function<T(T)> threshold);
+              function<T(T)> threshold)
+            :
+            weights(input_size, output_size), threshold_function(threshold)
+        {};
 
-        mapped_vector operator >> (const mapped_vector &input)
+        mapped_vector<T> operator >> (const mapped_vector<T> &input)
         {
-            return threshold % (biases + weights * input);
+            return threshold_function % (biases + weights * input);
         }
 
     private:
