@@ -90,6 +90,9 @@ namespace ffnn
         mapped_vector<T> biases;
         //! The threshold function applied to the weighted sum of inputs.
         std::function<T(T)> threshold_function;
+        //! The function used to compute the derivate.
+        //! It takes a = threshold_function(z) as input.
+        std::function<T(T)> derivative_function;
 
         friend Network<T>;
     };

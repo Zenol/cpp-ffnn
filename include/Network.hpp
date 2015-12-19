@@ -76,26 +76,26 @@ namespace ffnn
             auto dC_over_da = a_vec.back() - output;
 
             // The delta list is the list of all gradients
-            // std::vector<mapped_vector<T>> &delta_list;
+            std::vector<mapped_vector<T>> delta_list;
 
             // Reverse order browsing of outputs of neurons
-            // auto a_vec_it = a_vec.rbegin();
-            // //Delta L :
-            // auto delta_L = element_prod(dC_over_da, a_vec_it->threshold_function % *a_vec_it);
-            // delta_list.push_front(delta_L);
-            // for (auto l : layers)
-            // {
-            //     auto exp1 = prod(trans(l.weights), l.derivative_function % delta_list.front());
-            //     auto exp2 = threashold % *a_vec_it;
-            //     auto r = element_prod(exp1, exp2);
+            auto a_vec_it = a_vec.rbegin();
+            //Delta L :
+            auto delta_L = element_prod(dC_over_da, a_vec_it->threshold_function % *a_vec_it);
+            delta_list.push_front(delta_L);
+            for (auto l : layers)
+            {
+                auto exp1 = prod(trans(l.weights), delta_list.front());
+                auto exp2 = l.derivative_function % *a_vec_it;
+                auto r = element_prod(exp1, exp2);
 
-            //     a_vec_it++;
-            // };
+                a_vec_it++;
+            };
 
             ///////////////////////////////////////////////////////////////
             // Compute the derivative of the wieghts and the biases, namely
             // dC_over_dw and dC_over_db.
-
+            
         }
     private:
         layer_list layers;
