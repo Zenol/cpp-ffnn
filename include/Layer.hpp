@@ -17,7 +17,9 @@ namespace ffnn
 {
     using namespace boost::numeric::ublas;
     using namespace boost;
-    using namespace std;
+
+    template<typename T>
+    class Network;
 
     template<typename T>
     class Layer
@@ -36,6 +38,9 @@ namespace ffnn
             :weights(output_size, input_size), biases(output_size),
              threshold_function(threshold)
         {};
+
+        unsigned int get_input_size() const {return weights.size2();};
+        unsigned int get_output_size() const {return weights.size1();};
 
         mapped_vector<T> operator<< (const mapped_vector<T> &input) const
         {
@@ -85,6 +90,8 @@ namespace ffnn
         mapped_vector<T> biases;
         //! The threshold function applied to the weighted sum of inputs.
         std::function<T(T)> threshold_function;
+
+        friend Network<T>;
     };
 
 
@@ -99,7 +106,6 @@ namespace ffnn
     {
         return layer << input;
     }
-
 };
 
 #endif /* !LAYER */
