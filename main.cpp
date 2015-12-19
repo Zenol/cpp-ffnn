@@ -4,10 +4,13 @@
 using namespace ffnn;
 
 int main () {
-    mapped_vector<float> v(10, 1);
+    mapped_vector<float> v(10);
 
-    Layer<float> layer(10, 4, std::function<float(float)>(ffnn::sigmoid));
+    Layer<float> layer(10, 4, ffnn::sigmoid<float>);
+    layer.engine.seed(42);
+    layer.randomize();
 
-    std::cout << (v >> layer);
+    std::cout << v << std::endl;
+    std::cout << (layer << v) << std::endl;
     return 0;
 }
