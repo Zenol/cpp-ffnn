@@ -37,20 +37,45 @@ namespace ffnn
              threshold_function(threshold)
         {};
 
-        mapped_vector<T> operator << (const mapped_vector<T> &input) const
+        mapped_vector<T> operator<< (const mapped_vector<T> &input) const
         {
-            std::cout << weights << std::endl;
-            std::cout << input << std::endl;
             return threshold_function % mapped_vector<T>(biases + prod(weights, input));
         }
 
+        //! Randomize weights and biases with values in [0, 1].
         void randomize(void)
         {
-            auto f = [this](T x) -> T {return T(engine() - engine.min()) / T(engine.max());};
-            weights = f % weights;
-            biases = f % biases;
+            // Notice this function doesn't work for non-fractional type T.
+            auto f = [this](T x) -> T
+                {
+                    return T(engine() - engine.min()) / T(engine.max());
+                };
+            f %= weights;
+            f %= biases;
         }
 
+        //! Randomize weights and biases with values in
+        //! [0, minstd_rand::max() - minstd_rand::min()].
+        void randomize_int(void)
+        {
+            // Notice this function doesn't work for non-fractional type T.
+            auto f = [this](T x) -> T {return T(engine() - engine.min());};
+            f %= weights;
+            f %= biases;
+        }
+
+        //! Display function
+        friend
+        std::ostream &operator<< (std::ostream &oss, const Layer<T> &l)
+        {
+            oss << "Layer<> :" << std::endl;
+            oss << "  Weigths : " << l.weights << std::endl;
+            oss << "  Biases : " << l.biases;
+            return oss;
+        }
+
+        //! Random generator engine. Used by randomize() and
+        //! randomize_int().
         std::minstd_rand engine;
 
     private:
@@ -61,6 +86,7 @@ namespace ffnn
         //! The threshold function applied to the weighted sum of inputs.
         std::function<T(T)> threshold_function;
     };
+
 
     template<typename T>
     T sigmoid(const T x)

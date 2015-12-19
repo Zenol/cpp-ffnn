@@ -10,7 +10,7 @@ int main () {
     layer.engine.seed(42);
     layer.randomize();
 
-    std::cout << v << std::endl;
+    std::cout << layer << std::endl;
     std::cout << (layer << v) << std::endl;
     return 0;
 }
