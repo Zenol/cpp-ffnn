@@ -5,6 +5,7 @@
 
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/vector_sparse.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 
 namespace ffnn
 {
@@ -59,7 +60,7 @@ namespace ffnn
             return output;
         }
 
-        void forward(const mapped_vector<T> &input, const mapped_vector<T> &output)
+        void train(T h, const mapped_vector<T> &input, const mapped_vector<T> &output)
         {
             //////////////////////////////////////////
             // Compute the forward pass from the input
@@ -75,27 +76,47 @@ namespace ffnn
             // dC_over_da means the gradient of C on the direction a.
             auto dC_over_da = a_vec.back() - output;
 
-            // The delta list is the list of all gradients
+            // The delta list is the list of all gradients in reverse order
             std::vector<mapped_vector<T>> delta_list;
 
             // Reverse order browsing of outputs of neurons
             auto a_vec_it = a_vec.rbegin();
             //Delta L :
-            auto delta_L = element_prod(dC_over_da, a_vec_it->threshold_function % *a_vec_it);
-            delta_list.push_front(delta_L);
-            for (auto l : layers)
+            mapped_vector<T> delta_L = element_prod(dC_over_da,
+                                                    layers.back().threshold_function % *a_vec_it);
+            delta_list.push_back(delta_L);
+            a_vec_it++;
+            for (auto l : boost::adaptors::reverse(layers))
             {
-                auto exp1 = prod(trans(l.weights), delta_list.front());
+                auto exp1 = prod(trans(l.weights), delta_list.back());
                 auto exp2 = l.derivative_function % *a_vec_it;
-                auto r = element_prod(exp1, exp2);
-
+                delta_list.push_back(element_prod(exp1, exp2));
+                //Notice we are also computing the derivative of C over
+                //the input, wich could be used to extract 'images patchs'.
                 a_vec_it++;
             };
 
             ///////////////////////////////////////////////////////////////
             // Compute the derivative of the wieghts and the biases, namely
-            // dC_over_dw and dC_over_db.
-            
+            // dC_over_dw and dC_over_db = delta_list and apply the modification
+            // to the layer. They are stored in reverse order.
+            //auto &dC_over_db = delta_list;
+
+            // Reverse order (right -> left) browsing of a_vec and delta_list.
+            // We throw the last vector of a_vec and the first vector of delta_list.
+            a_vec_it = ++a_vec.rbegin();
+            auto delta_it = delta_list.begin();
+            for (auto &l : boost::adaptors::reverse(layers))
+            {
+                auto m = outer_prod(*delta_it, *a_vec_it);
+
+                // Update with the gradient
+                l.weights -= h*m;
+                l.biases -= h* (*delta_it);
+
+                a_vec_it++;
+                delta_it++;
+            }
         }
     private:
         layer_list layers;

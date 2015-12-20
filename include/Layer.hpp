@@ -31,7 +31,7 @@ namespace ffnn
          */
         Layer(unsigned int input_size, unsigned int output_size, T(*threshold)(T))
             :weights(output_size, input_size), biases(output_size),
-             threshold_function(threshold)
+             threshold_function(threshold), derivative_function([](T v){return v;})
         {};
         Layer(unsigned int input_size, unsigned int output_size,
               std::function<T(T)> threshold)
