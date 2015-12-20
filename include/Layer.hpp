@@ -29,14 +29,15 @@ namespace ffnn
          * \param input_size The length of the input vector
          * \param output_size The number of neurons inside the layer
          */
-        Layer(unsigned int input_size, unsigned int output_size, T(*threshold)(T))
+        Layer(unsigned int input_size, unsigned int output_size,
+              T(*threshold)(T), T(*derivative)(T))
             :weights(output_size, input_size), biases(output_size),
-             threshold_function(threshold), derivative_function([](T v){return v;})
+             threshold_function(threshold), derivative_function(derivative)
         {};
         Layer(unsigned int input_size, unsigned int output_size,
-              std::function<T(T)> threshold)
+              std::function<T(T)> threshold, std::function<T(T)> derivative)
             :weights(output_size, input_size), biases(output_size),
-             threshold_function(threshold)
+             threshold_function(threshold), derivative_function(derivative)
         {};
 
         unsigned int get_input_size() const {return weights.size2();};
@@ -102,6 +103,12 @@ namespace ffnn
     T sigmoid(const T x)
     {
         return static_cast<T>(1) / (static_cast<T>(1) + exp(-x));
+    };
+
+    template<typename T>
+    T sigmoid_prime(const T a)
+    {
+        return a * (static_cast<T>(1) - a);
     };
 
     template<typename T>

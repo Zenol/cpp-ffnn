@@ -20,7 +20,7 @@ namespace MNIST
 
         for (int i = 0; i < count; i++)
         {
-            std::vector<word8> image(count);
+            std::vector<word8> image(w*h);
             ifs.read(reinterpret_cast<char*>(image.data()), w * h);
             images.push_back(std::move(image));
         }
