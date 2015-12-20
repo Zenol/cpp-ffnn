@@ -4,37 +4,34 @@
 
 using namespace ffnn;
 
-int main () {
-    mapped_vector<float> v(10);
-    mapped_vector<float> w(2);
-    v[1] = 42;
-    w[1] = 1;
+int main ()
+{
+    //Create network
 
-    Layer<float> layer1(10, 4, ffnn::sigmoid<float>);
-    Layer<float> layer2(4, 2, ffnn::sigmoid<float>);
+    Layer<float> layer1(784, 15, ffnn::sigmoid<float>);
+    Layer<float> layer2(15, 10, ffnn::sigmoid<float>);
 
     layer1.randomize();
     layer2.randomize();
 
     Network<float> net;
 
-    std::cout << net.connect_layer(layer1) << std::endl;
-    std::cout << net.connect_layer(layer2) << std::endl;
+    if (!net.connect_layer(layer1) || !net.connect_layer(layer2))
+    {
+        std::cout << "Can't connect layers" << std::endl;
+    }
+
+    //Load MNIST dataset
+    ImageSet imgset;
 
     std::cout << "Foward: " << std::endl;
     for (auto output : net.forward(v))
         std::cout << output << std::endl;
 
-    std::cout << std::endl;
-
-    std::cout << "Eval : " << std::endl;
-    std::cout << net.eval(v) << std::endl;
-
-    for (int i = 0; i < 300; i++)
+    for (int i = 0; i < 10000; i++)
     {
-        std::cout << "Training :" << std::endl;
-        net.train(3, v, w);
-        std::cout << net.eval(v) << std::endl;
+        //Training here
     }
+
     return 0;
 }
