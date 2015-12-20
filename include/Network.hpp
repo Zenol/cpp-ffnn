@@ -40,9 +40,9 @@ namespace ffnn
 
         //! Compute forward pass of the network
         //! \return The list of neuron outputs. The input is saw as the first layer.
-        std::vector<mapped_vector<T>> forward(const mapped_vector<T> &input)
+        std::vector<vector<T>> forward(const vector<T> &input)
         {
-            std::vector<mapped_vector<T>> out_list;
+            std::vector<vector<T>> out_list;
 
             out_list.push_back(input);
             for (auto layer : layers)
@@ -52,15 +52,15 @@ namespace ffnn
         }
 
         //! Evaluate a network
-        mapped_vector<T> eval(const mapped_vector<T> &input)
+        vector<T> eval(const vector<T> &input)
         {
-            mapped_vector<T> output(input);
+            vector<T> output(input);
             for (auto layer : layers)
                 output = output >> layer;
             return output;
         }
 
-        void train(T h, const mapped_vector<T> &input, const mapped_vector<T> &output)
+        void train(T h, const vector<T> &input, const vector<T> &output)
         {
             //////////////////////////////////////////
             // Compute the forward pass from the input
@@ -77,13 +77,13 @@ namespace ffnn
             auto dC_over_da = a_vec.back() - output;
 
             // The delta list is the list of all gradients in reverse order
-            std::vector<mapped_vector<T>> delta_list;
+            std::vector<vector<T>> delta_list;
 
             // Reverse order browsing of outputs of neurons
             auto a_vec_it = a_vec.rbegin();
             //Delta L :
-            mapped_vector<T> delta_L = element_prod(dC_over_da,
-                                                    layers.back().threshold_function % *a_vec_it);
+            vector<T> delta_L = element_prod(dC_over_da,
+                                                    layers.back().derivative_function % *a_vec_it);
             delta_list.push_back(delta_L);
             a_vec_it++;
             for (auto l : boost::adaptors::reverse(layers))
@@ -111,8 +111,10 @@ namespace ffnn
                 auto m = outer_prod(*delta_it, *a_vec_it);
 
                 // Update with the gradient
-                l.weights -= h*m;
-                l.biases -= h* (*delta_it);
+                l.weights -= h * m;
+                l.biases -= h * (*delta_it);
+
+//                std::cout << "Delta_Omega : \n" << m << "\nDelta_Beta :\n" << *delta_it << std::endl;
 
                 a_vec_it++;
                 delta_it++;

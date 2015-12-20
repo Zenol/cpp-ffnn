@@ -43,19 +43,17 @@ namespace ffnn
         unsigned int get_input_size() const {return weights.size2();};
         unsigned int get_output_size() const {return weights.size1();};
 
-        mapped_vector<T> operator<< (const mapped_vector<T> &input) const
+        vector<T> operator<< (const vector<T> &input) const
         {
-            return threshold_function % mapped_vector<T>(biases + prod(weights, input));
+            return threshold_function % vector<T>(biases + prod(weights, input));
         }
 
-        //! Randomize weights and biases with values in [0, 1].
+        //! Randomize weights and biases with values in [-1, 1].
         void randomize(void)
         {
             // Notice this function doesn't work for non-fractional type T.
-            auto f = [this](T x) -> T
-                {
-                    return T(engine() - engine.min()) / T(engine.max());
-                };
+            std::uniform_real_distribution<> dis(-1, 1);
+            auto f = [this, &dis](T x) -> T {return dis(eng);};
             f %= weights;
             f %= biases;
         }
@@ -65,7 +63,7 @@ namespace ffnn
         void randomize_int(void)
         {
             // Notice this function doesn't work for non-fractional type T.
-            auto f = [this](T x) -> T {return T(engine() - engine.min());};
+            auto f = [this](T x) -> T {return T(eng() - eng.min());};
             f %= weights;
             f %= biases;
         }
@@ -82,13 +80,13 @@ namespace ffnn
 
         //! Random generator engine. Used by randomize() and
         //! randomize_int().
-        std::minstd_rand engine;
+        std::minstd_rand eng;
 
     private:
         //! Weights of the neural network applied to the inputs.
-        mapped_matrix<T> weights;
+        matrix<T> weights;
         //! Biases aplied befor computing the threshold function.
-        mapped_vector<T> biases;
+        vector<T> biases;
         //! The threshold function applied to the weighted sum of inputs.
         std::function<T(T)> threshold_function;
         //! The function used to compute the derivate.
@@ -112,7 +110,7 @@ namespace ffnn
     };
 
     template<typename T>
-    mapped_vector<T> operator >> (const mapped_vector<T> &input, const Layer<T> layer)
+    vector<T> operator >> (const vector<T> &input, const Layer<T> layer)
     {
         return layer << input;
     }

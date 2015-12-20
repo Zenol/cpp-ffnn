@@ -5,6 +5,18 @@
 
 using namespace ffnn;
 
+template<typename T>
+int argmax(vector<T> v)
+{
+    int idx = 0;
+    for (int i = 1; i < v.size(); i++)
+    {
+        if(v[i] > v[idx])
+            idx = i;
+    }
+    return idx;
+}
+
 int main ()
 {
     //Create network
@@ -37,7 +49,7 @@ int main ()
         {
             vector<double> img(imgset.images[i].size());
             for (int j = 0; j < imgset.images[i].size(); j++)
-                img[j] = imgset.images[i][j];
+                img[j] = imgset.images[i][j] / 255.0;
 
             if (i % 1000 == 0)
                 std::cout << "Loaded: " << i << "\r" << std::flush;
@@ -49,28 +61,29 @@ int main ()
     std::cout << "MNIST Loaded     " << std::endl;
 
     //Training network
-    for (int i = 0; i < 5000 /*img_list.size()*/ ; i++)
+    std::cout << "Training network..." << std::endl;
+    for (int i = 0; i < img_list.size() ; i++)
     {
-        net.train(3, img_list[i], label_list[i]);
+        net.train(1, img_list[i], label_list[i]);
 
-        if (i % 10 == 0)
+        if (i % 1000 == 0)
             std::cout << "Trained: " << i << "\r" << std::flush;
     }
 
 
     //Checking efficiency
     int count = 0;
-    for (int i = 0; i < 20; i++) // img_list.size()
+    std::cout << "Checking efficiency..." << std::endl;
+    for (int i = 0; i < img_list.size(); i++)
     {
-//        count += net.eval(unit_vector<double>(10, img_list[i]) == label_list[i]);
+        count += argmax(net.eval(img_list[i])) == argmax(vector<double>(label_list[i]));
 
         if (i % 1000 == 0)
             std::cout << "Checked: " << i << "\r" << std::flush;
-
-        std::cout << net.eval(img_list[i]) << "\n" << label_list[i] << std::endl;
     }
-    std::cout << "Efficiency\t\t\t" << std::endl;
-    std::cout << (float)count / (float)img_list.size() << std::endl;
+    std::cout << "Efficiency : "
+              << 100 * (float)count / (float)img_list.size()
+              << " percent." << std::endl;
 
     return 0;
 }
