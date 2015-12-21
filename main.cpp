@@ -21,7 +21,7 @@ int main ()
 {
     //Create network
 
-    Layer<double> layer1(784, 15, ffnn::sigmoid<double>, ffnn::sigmoid_prime<double>);
+    Layer<double> layer1(84, 15, ffnn::sigmoid<double>, ffnn::sigmoid_prime<double>);
     Layer<double> layer2(15, 10, ffnn::sigmoid<double>, ffnn::sigmoid_prime<double>);
 
     layer1.randomize();
@@ -44,7 +44,7 @@ int main ()
         imgset.load("train-images-idx3-ubyte");
         MNIST::LabelSet labelset;
         labelset.load("train-labels-idx1-ubyte");
-
+        for (int www = 0; www < 2; www++)
         for (int i = 0; i < imgset.count; i++)
         {
             vector<double> img(imgset.images[i].size());
@@ -62,12 +62,16 @@ int main ()
 
     //Training network
     std::cout << "Training network..." << std::endl;
-    for (int i = 0; i < img_list.size() ; i++)
+    for (int z = 0; z < 4; z++)
     {
-        net.train(1, img_list[i], label_list[i]);
+        std::cout << "Pass " << z << std::endl;
+        for (int i = 0; i < img_list.size() ; i++)
+        {
+            net.train(1, img_list[i], label_list[i]);
 
-        if (i % 1000 == 0)
-            std::cout << "Trained: " << i << "\r" << std::flush;
+            if (i % 1000 == 0)
+                std::cout << "Trained: " << i << "\r" << std::flush;
+        }
     }
 
 
@@ -84,6 +88,8 @@ int main ()
     std::cout << "Efficiency : "
               << 100 * (float)count / (float)img_list.size()
               << " percent." << std::endl;
+
+    net.save_file("mnist_network.json");
 
     return 0;
 }

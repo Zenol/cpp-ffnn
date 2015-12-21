@@ -7,6 +7,11 @@
 #include <boost/numeric/ublas/vector_sparse.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+
+#include <fstream>
+
 namespace ffnn
 {
     using namespace boost::numeric::ublas;
@@ -22,6 +27,8 @@ namespace ffnn
         //! output size (number of neurons).
         bool connect_layer(const Layer<T> &layer)
         {
+            if (!layer.valid())
+                return false;
             if (!layers.empty())
                 if (layers.back().get_output_size() != layer.get_input_size())
                     return false;
@@ -97,7 +104,7 @@ namespace ffnn
             };
 
             ///////////////////////////////////////////////////////////////
-            // Compute the derivative of the wieghts and the biases, namely
+            // Compute the derivative of the weights and the biases, namely
             // dC_over_dw and dC_over_db = delta_list and apply the modification
             // to the layer. They are stored in reverse order.
             //auto &dC_over_db = delta_list;
@@ -114,12 +121,73 @@ namespace ffnn
                 l.weights -= h * m;
                 l.biases -= h * (*delta_it);
 
-//                std::cout << "Delta_Omega : \n" << m << "\nDelta_Beta :\n" << *delta_it << std::endl;
-
                 a_vec_it++;
                 delta_it++;
             }
         }
+
+        friend
+        std::ostream &operator<< (std::ostream &oss, const Network<T> &n)
+        {
+            boost::property_tree::write_json(oss, n.serialize());
+            return oss;
+        }
+
+        boost::property_tree::ptree serialize()
+        {
+            boost::property_tree::ptree root;
+
+            for (auto l : layers)
+                root.add_child("network.layers.layer", l.serialize());
+
+            return root;
+        }
+
+        void save_file(std::string filename)
+        {
+            std::ofstream ofs(filename);
+            boost::property_tree::write_json(ofs, serialize());
+            ofs << "\n";
+        }
+
+        bool load(const boost::property_tree::ptree &tree)
+        {
+            layers.resize(0);
+
+            try
+            {
+                for (auto &l : tree.get_child("network.layers"))
+                {
+                    Layer<T> layer;
+                    if (!layer.load(l.second)
+                        || !connect_layer(std::move(layer)))
+                    {
+                        layers.resize(0);
+                        return false;
+                    }
+                }
+            }
+            catch(std::exception &e)
+            {
+#ifdef DEBUG
+                std::cerr << e.what();
+#endif
+            }
+            return true;
+        }
+
+        void load_file(std::string filename)
+        {
+            namespace pt = boost::property_tree;
+
+            pt::ptree tree;
+
+            std::ifstream ifs(filename);
+            pt::read_json(ifs, tree);
+
+            load(tree);
+        }
+
     private:
         layer_list layers;
     };
